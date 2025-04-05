@@ -28,7 +28,6 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-
       - name: Build & push backend Docker image
         working-directory: ./backend/cosmeticshop
         run: |
