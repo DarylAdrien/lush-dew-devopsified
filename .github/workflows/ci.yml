@@ -24,35 +24,32 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Set image tag
-        id: set-tag
-        run: echo "TAG=$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
 
       - name: Build & push backend Docker image
         working-directory: ./backend/cosmeticshop
         run: |
           docker build \
-            -t $REGISTRY/$BACKEND_IMAGE_NAME${{ env.TAG }} \
+            -t $REGISTRY/$BACKEND_IMAGE_NAME${{ github.run_number }} \
             -f Dockerfile .
-          docker push $REGISTRY/$BACKEND_IMAGE_NAME${{ env.TAG }}
+          docker push $REGISTRY/$BACKEND_IMAGE_NAME${{ github.run_number }}
 
       - name: Build & push frontend Docker image
         working-directory: ./frontend
         run: |
           docker build \
-            -t $REGISTRY/$FRONTEND_IMAGE_NAME${{ env.TAG }} \
+            -t $REGISTRY/$FRONTEND_IMAGE_NAME${{ github.run_number }} \
             -f Dockerfile .
-          docker push $REGISTRY/$FRONTEND_IMAGE_NAME${{ env.TAG }}
+          docker push $REGISTRY/$FRONTEND_IMAGE_NAME${{ github.run_number }}
 
       - name: Update both image tags
         run: |
-          sed -i 's|\(tag1: "\)v[0-9]*"|\1${{ env.TAG }}"|' helm/lushdew-chart/values.yaml
-          sed -i 's|\(tag2: "\)v[0-9]*"|\1${{ env.TAG }}"|' helm/lushdew-chart/values.yaml
+          sed -i 's|\(tag1: "\)v[0-9]*"|\1${{ github.run_number }}"|' helm/lushdew-chart/values.yaml
+          sed -i 's|\(tag2: "\)v[0-9]*"|\1${{ github.run_number }}"|' helm/lushdew-chart/values.yaml
 
       - name: Commit & push updated Helm chart
         run: |
           git config --global user.name "daryladrien"
           git config --global user.email "daryladrien27@gmail.com"
           git add helm/lushdew-chart/values.yaml
-          git commit -m "ci: bump image tag to ${{ env.TAG }}"
+          git commit -m "ci: bump image tag to ${{ github.run_number }}"
           git push
