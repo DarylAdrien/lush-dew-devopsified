@@ -8,6 +8,9 @@ on:
       - 'helm/**'
       - 'k8s/**'
       - 'README.md'
+      
+permissions:
+  contents: write
 
 env:
   REGISTRY: daryladriene
