@@ -25,7 +25,7 @@ const BestSeller = ({ category , onAuthClick, username, userType, handleLogout }
 
 
     useEffect(() => {
-        fetch(`http://127.0.0.1:8000/api/products/?category=${selectedCategory}`)
+        fetch(`http://lushdew.local/api/products/?category=${selectedCategory}`)
             .then((response) => response.json())
             .then((data) => {
                 setProducts(data);
@@ -146,7 +146,7 @@ const BestSeller = ({ category , onAuthClick, username, userType, handleLogout }
                                             onClick={(e) => { e.stopPropagation(); toggleFavorite(item); }}>
                                             {favorites.some(fav => fav.id === item.id) ? <FaHeart /> : <FaRegHeart />}
                                         </div>
-                                        <img src={`http://127.0.0.1:8000${item.image}`} alt={item.title}
+                                        <img src={`http://lushdew.local${item.image}`} alt={item.title}
                                             className="card-img-top p-2" style={{ height: "350px", objectFit: "cover" }} />
                                         <div className="card-body">
                                             <span className="badge bg-danger text-white mb-2 rounded-pill">BEST SELLER</span>

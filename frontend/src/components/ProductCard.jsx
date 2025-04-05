@@ -24,7 +24,7 @@ const ProductCard = ({ product }) => {
       if (!accessToken) return;
 
       try {
-        const response = await axios.get("http://127.0.0.1:8000/api/user/info/", {
+        const response = await axios.get("http://backend-service:8000/api/user/info/", {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
 
@@ -84,7 +84,7 @@ const ProductCard = ({ product }) => {
           {isFavorite ? <FaHeart /> : <FaRegHeart />}
         </div>
 
-        <img src={`http://127.0.0.1:8000${product.image}`} alt={product.title} className="card-img-top mx-auto" style={{ width: "80%", height: "auto" }} />
+        <img src={`http://backend-service:8000${product.image}`} alt={product.title} className="card-img-top mx-auto" style={{ width: "80%", height: "auto" }} />
         
         <div className="card-body d-flex flex-column align-items-center">
           <h5 className="fw-bold">{product.title}</h5>

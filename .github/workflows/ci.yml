@@ -1,0 +1,80 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: daryladriene
+  BACKEND_IMAGE_NAME: lush-dew:backend_
+  FRONTEND_IMAGE_NAME: lush-dew:frontend_
+
+jobs:
+  test-build-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Backend - Install dependencies and run pytest
+        working-directory: ./backend/cosmeticshop
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pytest
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Frontend - Install dependencies and run Jest
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm test -- --watchAll=false
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" \
+             | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Set image tag
+        id: set-tag
+        run: echo "TAG=$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
+
+      - name: Build & push backend Docker image
+        working-directory: ./backend/cosmeticshop
+        run: |
+          docker build \
+            -t $REGISTRY/$BACKEND_IMAGE_NAME${{ env.TAG }} \
+            -f Dockerfile .
+          docker push $REGISTRY/$BACKEND_IMAGE_NAME${{ env.TAG }}
+
+      - name: Build & push frontend Docker image
+        working-directory: ./frontend
+        run: |
+          docker build \
+            -t $REGISTRY/$FRONTEND_IMAGE_NAME${{ env.TAG }} \
+            -f Dockerfile .
+          docker push $REGISTRY/$FRONTEND_IMAGE_NAME${{ env.TAG }}
+
+      - name: Update both image tags
+        run: |
+          sed -i 's|\(tag1: "\)v[0-9]*"|\1${{ env.TAG }}"|' helm/lushdew-chart/values.yaml
+          sed -i 's|\(tag2: "\)v[0-9]*"|\1${{ env.TAG }}"|' helm/lushdew-chart/values.yaml
+
+
+      - name: Commit & push updated Helm chart
+        run: |
+          git config --global user.name "daryladrien"
+          git config --global user.email "daryladrien27@gmail.com"
+          git add helm/lushdew-chart/values.yaml
+          git commit -m "ci: bump image tag to ${{ env.TAG }}"
+          git push
