@@ -32,17 +32,17 @@ jobs:
         working-directory: ./backend/cosmeticshop
         run: |
           docker build \
-            -t ${{REGISTRY}}/${{BACKEND_IMAGE_NAME}}:backend_${{ github.run_number }} \
+            -t $REGISTRY/$BACKEND_IMAGE_NAME:backend_${{ github.run_number }} \
             -f Dockerfile .
-          docker push ${{REGISTRY}}/${{BACKEND_IMAGE_NAME}}:backend_${{ github.run_number }}
+          docker push $REGISTRY/$BACKEND_IMAGE_NAME:backend_${{ github.run_number }}
 
       - name: Build & push frontend Docker image
         working-directory: ./frontend
         run: |
           docker build \
-            -t ${{REGISTRY}}/${{FRONTEND_IMAGE_NAME}}:frontend_${{ github.run_number }} \
+            -t $REGISTRY/$FRONTEND_IMAGE_NAME:frontend_${{ github.run_number }} \
             -f Dockerfile .
-          docker push ${{REGISTRY}}/${{FRONTEND_IMAGE_NAME}}:frontend_${{ github.run_number }}
+          docker push $REGISTRY/$FRONTEND_IMAGE_NAME:frontend_${{ github.run_number }}
 
       - name: Update both image tags
         run: |
