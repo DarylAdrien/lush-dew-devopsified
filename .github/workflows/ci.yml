@@ -49,8 +49,8 @@ jobs:
 
       - name: Update both image tags
         run: |
-          sed -i 's|\(tag1: "\)v[0-9]*"|\1${{ github.run_number }}"|' helm/lushdew-chart/values.yaml
-          sed -i 's|\(tag2: "\)v[0-9]*"|\1${{ github.run_number }}"|' helm/lushdew-chart/values.yaml
+          sed -i 's|\(tag1: "\)v[0-9]*"|\1v${{ github.run_number }}"|' helm/lushdew-chart/values.yaml
+          sed -i 's|\(tag2: "\)v[0-9]*"|\1v${{ github.run_number }}"|' helm/lushdew-chart/values.yaml
 
       - name: Commit & push updated Helm chart
         run: |
