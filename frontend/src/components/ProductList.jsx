@@ -50,7 +50,7 @@ const ProductList = ({ category }) => {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    fetch(`http://backend-service:8000/api/products/?category=${category}`)
+    fetch(`http://lushdew.local/api/products/?category=${category}`)
       .then((response) => response.json())
       .then((data) => setProducts(data))
       .catch((error) => console.error("Error fetching products:", error));
