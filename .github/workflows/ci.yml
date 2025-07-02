@@ -121,13 +121,13 @@ jobs:
           docker run --rm \
             -e SONAR_HOST_URL="${{ env.SONAR_HOST_URL }}" \
             -e SONAR_TOKEN="${{ env.SONAR_TOKEN }}" \
-            -e SONAR_PROJECT_KEY="${{ env.SONAR_PROJECT_KEY_BACKEND }}" \
             -e SONAR_BRANCH_NAME="${{ github.ref_name }}" \
             -e SONAR_PULLREQUEST_KEY="${{ github.event.pull_request.number }}" \
             -e SONAR_PULLREQUEST_BRANCH="${{ github.head_ref }}" \
             -e SONAR_PULLREQUEST_BASE="${{ github.base_ref }}" \
             -v "$(pwd):/usr/src" \
-            sonarsource/sonar-scanner-cli
+            sonarsource/sonar-scanner-cli \
+            -Dsonar.projectKey="${{ env.SONAR_PROJECT_KEY_BACKEND }}"
             # Removed -Dsonar.python.coverage.reportPaths as no coverage is generated
 
       # --- SonarQube Static Code Analysis (React Frontend) ---
@@ -141,13 +141,13 @@ jobs:
           docker run --rm \
             -e SONAR_HOST_URL="${{ env.SONAR_HOST_URL }}" \
             -e SONAR_TOKEN="${{ env.SONAR_TOKEN }}" \
-            -e SONAR_PROJECT_KEY="${{ env.SONAR_PROJECT_KEY_FRONTEND }}" \
             -e SONAR_BRANCH_NAME="${{ github.ref_name }}" \
             -e SONAR_PULLREQUEST_KEY="${{ github.event.pull_request.number }}" \
             -e SONAR_PULLREQUEST_BRANCH="${{ github.head_ref }}" \
             -e SONAR_PULLREQUEST_BASE="${{ github.base_ref }}" \
             -v "$(pwd):/usr/src" \
-            sonarsource/sonar-scanner-cli
+            sonarsource/sonar-scanner-cli \
+            -Dsonar.projectKey="${{ env.SONAR_PROJECT_KEY_FRONTEND }}"
             # Removed -Dsonar.javascript.lcov.reportPaths and -Dsonar.typescript.lcov.reportPaths
 
       # --- Docker Build Stage ---
