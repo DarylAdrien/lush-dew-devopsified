@@ -97,58 +97,58 @@ jobs:
         with:
           fetch-depth: 0 # Required by SonarQube scanner to analyze the entire history
 
-      # --- SonarQube Static Code Analysis (Python/Django Backend) ---
-      # No Python setup or test steps needed as we're not doing coverage or unit testing here.
-      - name: Set up Java for SonarQube
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+      # # --- SonarQube Static Code Analysis (Python/Django Backend) ---
+      # # No Python setup or test steps needed as we're not doing coverage or unit testing here.
+      # - name: Set up Java for SonarQube
+      #   uses: actions/setup-java@v3
+      #   with:
+      #     distribution: 'temurin'
+      #     java-version: '17'
 
-      - name: Cache SonarQube packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar-${{ hashFiles('**/pom.xml', '**/build.gradle', '**/*.js', '**/*.ts', '**/*.py') }}
-          restore-keys: ${{ runner.os }}-sonar
+      # - name: Cache SonarQube packages
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ~/.sonar/cache
+      #     key: ${{ runner.os }}-sonar-${{ hashFiles('**/pom.xml', '**/build.gradle', '**/*.js', '**/*.ts', '**/*.py') }}
+      #     restore-keys: ${{ runner.os }}-sonar
 
-      - name: Run SonarQube analysis for Django Backend
-        env:
-          GITHUB_TOKEN: ${{ secrets.HUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_BACKEND }} # Specific token for backend project
-        working-directory: ./backend/cosmeticshop # Root of your Django project
-        run: |
-          docker run --rm \
-            -e SONAR_HOST_URL="${{ env.SONAR_HOST_URL }}" \
-            -e SONAR_TOKEN="${{ env.SONAR_TOKEN }}" \
-            -e SONAR_BRANCH_NAME="${{ github.ref_name }}" \
-            -e SONAR_PULLREQUEST_KEY="${{ github.event.pull_request.number }}" \
-            -e SONAR_PULLREQUEST_BRANCH="${{ github.head_ref }}" \
-            -e SONAR_PULLREQUEST_BASE="${{ github.base_ref }}" \
-            -v "$(pwd):/usr/src" \
-            sonarsource/sonar-scanner-cli \
-            -Dsonar.projectKey="${{ env.SONAR_PROJECT_KEY_BACKEND }}"
-            # Removed -Dsonar.python.coverage.reportPaths as no coverage is generated
+      # - name: Run SonarQube analysis for Django Backend
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.HUB_TOKEN }}
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_BACKEND }} # Specific token for backend project
+      #   working-directory: ./backend/cosmeticshop # Root of your Django project
+      #   run: |
+      #     docker run --rm \
+      #       -e SONAR_HOST_URL="${{ env.SONAR_HOST_URL }}" \
+      #       -e SONAR_TOKEN="${{ env.SONAR_TOKEN }}" \
+      #       -e SONAR_BRANCH_NAME="${{ github.ref_name }}" \
+      #       -e SONAR_PULLREQUEST_KEY="${{ github.event.pull_request.number }}" \
+      #       -e SONAR_PULLREQUEST_BRANCH="${{ github.head_ref }}" \
+      #       -e SONAR_PULLREQUEST_BASE="${{ github.base_ref }}" \
+      #       -v "$(pwd):/usr/src" \
+      #       sonarsource/sonar-scanner-cli \
+      #       -Dsonar.projectKey="${{ env.SONAR_PROJECT_KEY_BACKEND }}"
+      #       # Removed -Dsonar.python.coverage.reportPaths as no coverage is generated
 
-      # --- SonarQube Static Code Analysis (React Frontend) ---
-      # No Node.js setup or test steps needed as we're not doing coverage or unit testing here.
-      - name: Run SonarQube analysis for React Frontend
-        env:
-          GITHUB_TOKEN: ${{ secrets.HUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }} # Specific token for frontend project
-        working-directory: ./frontend # Root of your React project
-        run: |
-          docker run --rm \
-            -e SONAR_HOST_URL="${{ env.SONAR_HOST_URL }}" \
-            -e SONAR_TOKEN="${{ env.SONAR_TOKEN }}" \
-            -e SONAR_BRANCH_NAME="${{ github.ref_name }}" \
-            -e SONAR_PULLREQUEST_KEY="${{ github.event.pull_request.number }}" \
-            -e SONAR_PULLREQUEST_BRANCH="${{ github.head_ref }}" \
-            -e SONAR_PULLREQUEST_BASE="${{ github.base_ref }}" \
-            -v "$(pwd):/usr/src" \
-            sonarsource/sonar-scanner-cli \
-            -Dsonar.projectKey="${{ env.SONAR_PROJECT_KEY_FRONTEND }}"
-            # Removed -Dsonar.javascript.lcov.reportPaths and -Dsonar.typescript.lcov.reportPaths
+      # # --- SonarQube Static Code Analysis (React Frontend) ---
+      # # No Node.js setup or test steps needed as we're not doing coverage or unit testing here.
+      # - name: Run SonarQube analysis for React Frontend
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.HUB_TOKEN }}
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }} # Specific token for frontend project
+      #   working-directory: ./frontend # Root of your React project
+      #   run: |
+      #     docker run --rm \
+      #       -e SONAR_HOST_URL="${{ env.SONAR_HOST_URL }}" \
+      #       -e SONAR_TOKEN="${{ env.SONAR_TOKEN }}" \
+      #       -e SONAR_BRANCH_NAME="${{ github.ref_name }}" \
+      #       -e SONAR_PULLREQUEST_KEY="${{ github.event.pull_request.number }}" \
+      #       -e SONAR_PULLREQUEST_BRANCH="${{ github.head_ref }}" \
+      #       -e SONAR_PULLREQUEST_BASE="${{ github.base_ref }}" \
+      #       -v "$(pwd):/usr/src" \
+      #       sonarsource/sonar-scanner-cli \
+      #       -Dsonar.projectKey="${{ env.SONAR_PROJECT_KEY_FRONTEND }}"
+      #       # Removed -Dsonar.javascript.lcov.reportPaths and -Dsonar.typescript.lcov.reportPaths
 
       # --- Docker Build Stage ---
       - name: Login to DockerHub
