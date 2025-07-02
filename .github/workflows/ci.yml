@@ -1,3 +1,66 @@
+# name: CI Pipeline
+
+# on:
+#   push:
+#     branches:
+#       - main
+#     paths-ignore:
+#       - 'helm/**'
+#       - 'k8s/**'
+#       - 'README.md'
+      
+# permissions:
+#   contents: write
+
+# env:
+#   REGISTRY: daryladriene
+#   BACKEND_IMAGE_NAME: lush-dew
+#   FRONTEND_IMAGE_NAME: lush-dew
+
+# jobs:
+#   test-build-push:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v3
+
+#       - name: Login to DockerHub
+#         uses: docker/login-action@v3
+#         with:
+#           username: ${{ secrets.DOCKER_USERNAME }}
+#           password: ${{ secrets.DOCKER_PASSWORD }}
+
+#       - name: Build & push backend Docker image
+#         working-directory: ./backend/cosmeticshop
+#         run: |
+#           docker build \
+#             -t $REGISTRY/$BACKEND_IMAGE_NAME:backend_v${{ github.run_number }} \
+#             -f Dockerfile .
+#           docker push $REGISTRY/$BACKEND_IMAGE_NAME:backend_v${{ github.run_number }}
+
+#       - name: Build & push frontend Docker image
+#         working-directory: ./frontend
+#         run: |
+#           docker build \
+#             -t $REGISTRY/$FRONTEND_IMAGE_NAME:frontend_v${{ github.run_number }} \
+#             -f Dockerfile .
+#           docker push $REGISTRY/$FRONTEND_IMAGE_NAME:frontend_v${{ github.run_number }}
+
+#       - name: Update both image tags
+#         run: |
+#           sed -i 's|\(tag1: "\)v[0-9]*"|\1v${{ github.run_number }}"|' helm/lushdew-chart/values.yaml
+#           sed -i 's|\(tag2: "\)v[0-9]*"|\1v${{ github.run_number }}"|' helm/lushdew-chart/values.yaml
+
+#       - name: Commit & push updated Helm chart
+#         run: |
+#           git config --global user.name "daryladrien"
+#           git config --global user.email "daryladrien27@gmail.com"
+#           git add helm/lushdew-chart/values.yaml
+#           git commit -m "ci: bump image tag to ${{ github.run_number }}"
+#           git push
+
+
 name: CI Pipeline
 
 on:
@@ -8,46 +71,136 @@ on:
       - 'helm/**'
       - 'k8s/**'
       - 'README.md'
-      
+
 permissions:
-  contents: write
+  contents: write # Needed for committing changes to values.yaml
+  pull-requests: write # Recommended for SonarQube PR decoration (if using SonarCloud/SonarQube with GitHub integration)
+  id-token: write # Required for some advanced OIDC/cloud integrations, good practice for security actions
+  security-events: write # Required by Trivy to upload SARIF results to GitHub Security tab (optional, but good)
 
 env:
   REGISTRY: daryladriene
   BACKEND_IMAGE_NAME: lush-dew
   FRONTEND_IMAGE_NAME: lush-dew
+  # SonarQube specific environment variables (configure these)
+  SONAR_HOST_URL: ${{ secrets.SONARQUBE_HOST_URL }} # e.g., http://your-sonarqube-instance:9000
+  SONAR_PROJECT_KEY_BACKEND: lushdew_frontend # Replace with your SonarQube project key for Django backend
+  SONAR_PROJECT_KEY_FRONTEND: lushdew_frontend # Replace with your SonarQube project key for React frontend
 
 jobs:
-  test-build-push:
+  test-build-scan-push:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Required by SonarQube scanner to analyze the entire history
 
+      # --- SonarQube Static Code Analysis (Python/Django Backend) ---
+      # No Python setup or test steps needed as we're not doing coverage or unit testing here.
+      - name: Set up Java for SonarQube
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar-${{ hashFiles('**/pom.xml', '**/build.gradle', '**/*.js', '**/*.ts', '**/*.py') }}
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Run SonarQube analysis for Django Backend
+        env:
+          GITHUB_TOKEN: ${{ secrets.HUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_BACKEND }} # Specific token for backend project
+        working-directory: ./backend/cosmeticshop # Root of your Django project
+        run: |
+          docker run --rm \
+            -e SONAR_HOST_URL="${{ env.SONAR_HOST_URL }}" \
+            -e SONAR_TOKEN="${{ env.SONAR_TOKEN }}" \
+            -e SONAR_PROJECT_KEY="${{ env.SONAR_PROJECT_KEY_BACKEND }}" \
+            -e SONAR_BRANCH_NAME="${{ github.ref_name }}" \
+            -e SONAR_PULLREQUEST_KEY="${{ github.event.pull_request.number }}" \
+            -e SONAR_PULLREQUEST_BRANCH="${{ github.head_ref }}" \
+            -e SONAR_PULLREQUEST_BASE="${{ github.base_ref }}" \
+            -v "$(pwd):/usr/src" \
+            sonarsource/sonar-scanner-cli
+            # Removed -Dsonar.python.coverage.reportPaths as no coverage is generated
+
+      # --- SonarQube Static Code Analysis (React Frontend) ---
+      # No Node.js setup or test steps needed as we're not doing coverage or unit testing here.
+      - name: Run SonarQube analysis for React Frontend
+        env:
+          GITHUB_TOKEN: ${{ secrets.HUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONTEND }} # Specific token for frontend project
+        working-directory: ./frontend # Root of your React project
+        run: |
+          docker run --rm \
+            -e SONAR_HOST_URL="${{ env.SONAR_HOST_URL }}" \
+            -e SONAR_TOKEN="${{ env.SONAR_TOKEN }}" \
+            -e SONAR_PROJECT_KEY="${{ env.SONAR_PROJECT_KEY_FRONTEND }}" \
+            -e SONAR_BRANCH_NAME="${{ github.ref_name }}" \
+            -e SONAR_PULLREQUEST_KEY="${{ github.event.pull_request.number }}" \
+            -e SONAR_PULLREQUEST_BRANCH="${{ github.head_ref }}" \
+            -e SONAR_PULLREQUEST_BASE="${{ github.base_ref }}" \
+            -v "$(pwd):/usr/src" \
+            sonarsource/sonar-scanner-cli
+            # Removed -Dsonar.javascript.lcov.reportPaths and -Dsonar.typescript.lcov.reportPaths
+
+      # --- Docker Build Stage ---
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build & push backend Docker image
+      - name: Build backend Docker image
         working-directory: ./backend/cosmeticshop
         run: |
           docker build \
             -t $REGISTRY/$BACKEND_IMAGE_NAME:backend_v${{ github.run_number }} \
             -f Dockerfile .
-          docker push $REGISTRY/$BACKEND_IMAGE_NAME:backend_v${{ github.run_number }}
 
-      - name: Build & push frontend Docker image
+      - name: Build frontend Docker image
         working-directory: ./frontend
         run: |
           docker build \
             -t $REGISTRY/$FRONTEND_IMAGE_NAME:frontend_v${{ github.run_number }} \
             -f Dockerfile .
+
+      # --- Trivy Vulnerability Scan Stage (AFTER BUILD, BEFORE PUSH) ---
+      - name: Run Trivy vulnerability scan on backend image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '$REGISTRY/$BACKEND_IMAGE_NAME:backend_v${{ github.run_number }}'
+          format: 'table' # Or 'sarif' to upload to GitHub Security tab
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1' # Fail the pipeline if vulnerabilities above severity are found
+
+      - name: Run Trivy vulnerability scan on frontend image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '$REGISTRY/$FRONTEND_IMAGE_NAME:frontend_v${{ github.run_number }}'
+          format: 'table' # Or 'sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+
+      # --- Docker Push Stage ---
+      - name: Push backend Docker image
+        working-directory: ./backend/cosmeticshop
+        run: |
+          docker push $REGISTRY/$BACKEND_IMAGE_NAME:backend_v${{ github.run_number }}
+
+      - name: Push frontend Docker image
+        working-directory: ./frontend
+        run: |
           docker push $REGISTRY/$FRONTEND_IMAGE_NAME:frontend_v${{ github.run_number }}
 
-      - name: Update both image tags
+      # --- Update Image Tags & Commit (Existing Steps) ---
+      - name: Update both image tags in Helm chart
         run: |
           sed -i 's|\(tag1: "\)v[0-9]*"|\1v${{ github.run_number }}"|' helm/lushdew-chart/values.yaml
           sed -i 's|\(tag2: "\)v[0-9]*"|\1v${{ github.run_number }}"|' helm/lushdew-chart/values.yaml
