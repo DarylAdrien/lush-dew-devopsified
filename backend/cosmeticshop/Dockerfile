@@ -1,4 +1,6 @@
 # Use an official Python image as base
+
+# Use the latest official Python slim image
 FROM python:3.11-slim
 
 # Set environment variables
@@ -6,6 +8,14 @@ ENV PYTHONUNBUFFERED=1
 
 # Set the working directory inside the container
 WORKDIR /app
+
+# Install system updates and security patches, and essential build tools
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends gcc libpq-dev \
+    && pip install --upgrade pip setuptools wheel \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements file and install dependencies
 COPY requirements.txt .
