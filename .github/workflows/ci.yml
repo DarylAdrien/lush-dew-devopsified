@@ -84,7 +84,7 @@ env:
   FRONTEND_IMAGE_NAME: lush-dew
   # SonarQube specific environment variables (configure these)
   SONAR_HOST_URL: ${{ secrets.SONARQUBE_HOST_URL }} # e.g., http://your-sonarqube-instance:9000
-  SONAR_PROJECT_KEY_BACKEND: lushdew_frontend # Replace with your SonarQube project key for Django backend
+  SONAR_PROJECT_KEY_BACKEND: lushdew_backend # Replace with your SonarQube project key for Django backend
   SONAR_PROJECT_KEY_FRONTEND: lushdew_frontend # Replace with your SonarQube project key for React frontend
 
 jobs:
