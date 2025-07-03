@@ -9,7 +9,7 @@ const AuthPopup = ({ onClose, onLogin }) => {
 
   const handleSignup = async () => {
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/user/register/", {
+      const response = await axios.post("http://lushdew.local/api/user/register/", {
         username,
         password,
       });
@@ -25,7 +25,7 @@ const AuthPopup = ({ onClose, onLogin }) => {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/token/", {
+      const response = await axios.post("http://lushdew.local/api/token/", {
         username,
         password,
       });
