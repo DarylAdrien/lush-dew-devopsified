@@ -10,8 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from pathlib import Path
-
 from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -99,8 +99,12 @@ WSGI_APPLICATION = 'cosmeticshop.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('POSTGRES_DB', 'cosmeticshop'),
+        'USER': os.environ.get('POSTGRES_USER', 'cosmeticshopuser'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'cosmeticshoppass'),
+        'HOST': os.environ.get('POSTGRES_HOST', 'postgres'),  # service name in k8s
+        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
     }
 }
 
